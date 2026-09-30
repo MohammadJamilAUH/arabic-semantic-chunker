@@ -69,18 +69,17 @@ matching only.
 ## Benchmark
 
 Topic-boundary detection on 200 synthetic Arabic documents (Pk, lower is
-better; ≈0.5 means boundaries unrelated to the content). Same embeddings for
-every semantic method. Details, caveats and neural-embedder runs are in
-[`benchmarks/`](benchmarks/README.md).
+better; the fixed-size baseline scores 0.476). Details, caveats and
+WindowDiff are in [`benchmarks/`](benchmarks/README.md).
 
-| Method | No layout cues | Paragraph breaks |
-|---|---:|---:|
-| fixed-size (sentence-aware) | 0.476 | 0.476 |
-| semantic, greedy | 0.364 | 0.171 |
-| **semantic, optimal (default)** | **0.304** | **0.062** |
+| Embedder | Greedy, no layout | **Optimal, no layout** | **Optimal, paragraphs** |
+|---|---:|---:|---:|
+| built-in (NumPy only) | 0.368 | **0.314** | **0.076** |
+| `multilingual-e5-base` | 0.183 | **0.056** | **0.021** |
+| `paraphrase-multilingual-MiniLM-L12-v2` | 0.194 | **0.064** | **0.009** |
 
-The built-in embedder is lexical: it does well when the document has
-paragraphs, but for plain unformatted text use a neural embedder.
+Use a neural embedder for plain text without paragraph breaks; the built-in
+one is lexical and does well mainly when the document has paragraphs.
 
 ## Install
 

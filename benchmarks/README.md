@@ -27,17 +27,22 @@ Two layouts:
   with topic changes, which is more favourable than real documents, where
   a topic usually spans several paragraphs.
 
-## Results (built-in `HashingEmbedder`, 200 documents, seed 13)
+## Results (200 documents, seed 13)
 
-| Method | No layout cues: Pk ↓ | WD ↓ | Paragraph breaks: Pk ↓ | WD ↓ |
+Pk, lower is better. WindowDiff tracks Pk within 0.01 everywhere and is in
+the job summaries of the `benchmark` workflow. The fixed-size baseline scores
+0.476 in every setting.
+
+| Embedder | Greedy, no layout | **Optimal, no layout** | Greedy, paragraphs | **Optimal, paragraphs** |
 |---|---:|---:|---:|---:|
-| fixed-size (sentence-aware) | 0.476 | 0.476 | 0.476 | 0.476 |
-| semantic, greedy | 0.364 | 0.373 | 0.171 | 0.180 |
-| semantic, optimal, no discourse cues | 0.319 | 0.328 | 0.061 | 0.068 |
-| **semantic, optimal (default)** | **0.304** | **0.313** | **0.062** | **0.069** |
+| built-in `HashingEmbedder` | 0.368 | **0.314** | 0.186 | **0.076** |
+| `intfloat/multilingual-e5-small` | 0.226 | **0.079** | 0.130 | **0.012** |
+| `intfloat/multilingual-e5-base` | 0.183 | **0.056** | 0.138 | **0.021** |
+| `paraphrase-multilingual-MiniLM-L12-v2` | 0.194 | **0.064** | 0.149 | **0.009** |
 
-Neural embedders are run by the `benchmark` GitHub Actions workflow (results
-in its job summary), because they need a model download.
+"Optimal" is the default configuration. Neural rows come from the
+`benchmark` GitHub Actions workflow, which reruns them on every change to
+the library.
 
 ## What this shows, and what it doesn't
 
@@ -46,11 +51,19 @@ in its job summary), because they need a model download.
 - The dependency-free embedder is lexical. With no layout cues it finds
   topic changes clearly better than a size-only split, but far from
   perfectly; use a neural embedder for plain text without paragraphs.
-- Arabic discourse cues give a small gain without layout cues and none when
-  paragraphs exist. The defaults (`window=3`, `discourse_weight=0.05`,
-  `paragraph_bonus=0.15`) were chosen with a sweep on seed 99 and confirmed
-  on seed 13; with only 16 topics this is a small, synthetic corpus, so
-  treat the defaults as a starting point and re-tune on your own documents.
+- With a neural embedder the optimal segmentation finds topic changes
+  almost perfectly once paragraphs exist, and misses about 6% of
+  sentence pairs with no layout at all. Greedy thresholding is 2–15× worse
+  with the same embeddings.
+- Arabic discourse cues give a small gain with the lexical embedder and are
+  neutral (±0.002 Pk) with the neural ones. An earlier version added them
+  as a fixed amount and doubled the E5 models' error, because neural
+  distances vary over a much narrower range; bonuses are now measured in
+  standard deviations of each document's own distances.
+- The defaults (`window=3`, `discourse_weight=0.25`, `paragraph_bonus=2.0`)
+  were chosen with a sweep on seed 99 and confirmed on seed 13. With 16
+  topics this is a small, synthetic corpus, so treat them as a starting
+  point and re-tune on your own documents.
 - With `--random-start`, segments may open mid-topic with "كما…" or
   "وهذا…", which real topic changes rarely do. That setting is harder and
   penalises the discourse cues by construction.
