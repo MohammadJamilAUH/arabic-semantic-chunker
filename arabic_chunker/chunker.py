@@ -104,7 +104,9 @@ class ArabicSemanticChunker:
         ``"optimal"`` (dynamic programming) or ``"greedy"`` (classic
         threshold-and-accumulate).
     discourse_weight, paragraph_bonus:
-        Weight of Arabic discourse markers and of paragraph breaks.
+        Weight of Arabic discourse markers and of paragraph breaks, in
+        standard deviations of the document's boundary distances, so the same
+        value means the same thing for every embedder.
     overlap_sentences:
         Sentences repeated from the previous chunk of the same section.
     respect_structure:
@@ -122,8 +124,8 @@ class ArabicSemanticChunker:
         threshold_type: ThresholdType = "percentile",
         threshold_amount: float | None = None,
         strategy: Literal["optimal", "greedy"] = "optimal",
-        discourse_weight: float = 0.05,
-        paragraph_bonus: float = 0.15,
+        discourse_weight: float = 0.25,
+        paragraph_bonus: float = 2.0,
         min_size_penalty: float = 100.0,
         overlap_sentences: int = 0,
         respect_structure: bool = True,
@@ -218,13 +220,21 @@ class ArabicSemanticChunker:
         return units, sections
 
     def _boundary_scores(self, units: list[_Unit], emb: np.ndarray) -> np.ndarray:
-        """Score for the gap *after* unit i; ``inf`` marks a section boundary."""
+        """Score for the gap *after* unit i; ``inf`` marks a section boundary.
+
+        Discourse and paragraph bonuses are measured in standard deviations of
+        the document's own distance distribution. Embedders differ widely in
+        scale (lexical hashing distances sit near 0.9, neural ones often vary
+        within 0.1-0.3), so a fixed additive bonus that is a gentle nudge for
+        one would override the content signal of another.
+        """
         n = len(units)
-        scores = np.zeros(max(n - 1, 0), dtype=np.float64)
+        dist = np.zeros(max(n - 1, 0), dtype=np.float64)
+        bias = np.zeros_like(dist)
         w = self.window
         for i in range(n - 1):
             if units[i].section != units[i + 1].section:
-                scores[i] = np.inf
+                dist[i] = np.inf
                 continue
             sec = units[i].section
             lo = i
@@ -236,13 +246,14 @@ class ArabicSemanticChunker:
             left = emb[lo:i + 1].mean(axis=0)
             right = emb[i + 1:hi + 1].mean(axis=0)
             denom = float(np.linalg.norm(left) * np.linalg.norm(right)) or 1.0
-            dist = 1.0 - float(left @ right) / denom
+            dist[i] = 1.0 - float(left @ right) / denom
             nxt = units[i + 1].span
-            bias = discourse_bias(nxt.text, self.discourse_weight)
+            bias[i] = discourse_bias(nxt.text, self.discourse_weight)
             if nxt.paragraph_start:
-                bias += self.paragraph_bonus
-            scores[i] = dist + bias
-        return scores
+                bias[i] += self.paragraph_bonus
+        finite = np.isfinite(dist)
+        scale = float(dist[finite].std()) if finite.sum() > 1 else 0.0
+        return dist + bias * (scale or 1.0)
 
     def _threshold(self, finite: np.ndarray) -> tuple[float, float]:
         if finite.size == 0:

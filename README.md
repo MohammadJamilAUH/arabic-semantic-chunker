@@ -131,8 +131,8 @@ for child in res.children:
 | `threshold_type` | `"percentile"` | also `"std"` (mean + k·σ) and `"iqr"` (Q3 + k·IQR) |
 | `threshold_amount` | 70 / 0.5 / 0 | higher → fewer, larger chunks |
 | `window` | 3 | sentences averaged on each side of a gap |
-| `discourse_weight` | 0.05 | weight of Arabic discourse markers (0 disables) |
-| `paragraph_bonus` | 0.15 | preference for cutting at blank lines |
+| `discourse_weight` | 0.25 | Arabic discourse markers, in std-devs of the document's boundary distances (0 disables) |
+| `paragraph_bonus` | 2.0 | preference for cutting at blank lines, same units |
 | `strategy` | `"optimal"` | or `"greedy"` |
 | `respect_structure` | `True` | heading detection and hard section boundaries |
 

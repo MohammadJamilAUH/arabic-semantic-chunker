@@ -44,7 +44,7 @@ _CONTINUE_RE = _compile(_CONTINUE)
 _LIST_ITEM_RE = re.compile(r"^\s*(?:[-–•●▪*]|\(?\d{1,3}[.)\-]|\(?[ء-ي][)\-])")
 
 
-def discourse_bias(sentence: str, weight: float = 0.05) -> float:
+def discourse_bias(sentence: str, weight: float = 1.0) -> float:
     """Boundary bias for placing a chunk break immediately before ``sentence``."""
     if _LIST_ITEM_RE.match(sentence):
         # A list item continues the list that precedes it.
