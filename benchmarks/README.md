@@ -53,8 +53,8 @@ the library.
   perfectly; use a neural embedder for plain text without paragraphs.
 - With a neural embedder the optimal segmentation finds topic changes
   almost perfectly once paragraphs exist, and misses about 6% of
-  sentence pairs with no layout at all. Greedy thresholding is 2–15× worse
-  with the same embeddings.
+  sentence pairs with no layout at all. With neural embeddings, greedy
+  thresholding has 3–17× the error of optimal segmentation.
 - Arabic discourse cues give a small gain with the lexical embedder and are
   neutral (±0.002 Pk) with the neural ones. An earlier version added them
   as a fixed amount and doubled the E5 models' error, because neural
