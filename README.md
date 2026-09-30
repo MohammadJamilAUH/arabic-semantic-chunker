@@ -66,6 +66,22 @@ matching only.
 | Metrics | `pk`, `window_diff` against gold boundaries; label-free `chunk_quality()` |
 | CLI | `arabic-chunker file.md --format jsonl --stats` |
 
+## Benchmark
+
+Topic-boundary detection on 200 synthetic Arabic documents (Pk, lower is
+better; ≈0.5 means boundaries unrelated to the content). Same embeddings for
+every semantic method. Details, caveats and neural-embedder runs are in
+[`benchmarks/`](benchmarks/README.md).
+
+| Method | No layout cues | Paragraph breaks |
+|---|---:|---:|
+| fixed-size (sentence-aware) | 0.476 | 0.476 |
+| semantic, greedy | 0.364 | 0.171 |
+| **semantic, optimal (default)** | **0.304** | **0.062** |
+
+The built-in embedder is lexical: it does well when the document has
+paragraphs, but for plain unformatted text use a neural embedder.
+
 ## Install
 
 ```bash
@@ -85,7 +101,7 @@ from arabic_chunker import ArabicSemanticChunker, SentenceTransformerEmbedder
 
 chunker = ArabicSemanticChunker(
     SentenceTransformerEmbedder("intfloat/multilingual-e5-base"),
-    max_tokens=300, min_tokens=60, window=2,
+    max_tokens=300, min_tokens=60,
 )
 ```
 
@@ -114,9 +130,9 @@ for child in res.children:
 | `max_tokens` / `min_tokens` | 256 / 48 | hard ceiling / effectively-hard floor |
 | `threshold_type` | `"percentile"` | also `"std"` (mean + k·σ) and `"iqr"` (Q3 + k·IQR) |
 | `threshold_amount` | 70 / 0.5 / 0 | higher → fewer, larger chunks |
-| `window` | 2 | sentences averaged on each side of a gap; raise for noisy text |
-| `discourse_weight` | 0.15 | weight of Arabic discourse markers (0 disables) |
-| `paragraph_bonus` | 0.05 | preference for cutting at blank lines |
+| `window` | 3 | sentences averaged on each side of a gap |
+| `discourse_weight` | 0.05 | weight of Arabic discourse markers (0 disables) |
+| `paragraph_bonus` | 0.15 | preference for cutting at blank lines |
 | `strategy` | `"optimal"` | or `"greedy"` |
 | `respect_structure` | `True` | heading detection and hard section boundaries |
 
@@ -141,7 +157,13 @@ chunk_quality(chunks)  # coherence, adjacent similarity, size stats
 ```bash
 pip install -e ".[dev]"
 pytest
+python benchmarks/run_benchmark.py
 ```
+
+Releases: bump `version` in `pyproject.toml`, then push a matching tag
+(`git tag v0.1.0 && git push origin v0.1.0`). The `release` workflow tests,
+builds and publishes to PyPI through trusted publishing (see the one-time
+setup at the top of `.github/workflows/release.yml`).
 
 ---
 

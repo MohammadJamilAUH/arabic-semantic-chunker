@@ -16,7 +16,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("file", help="UTF-8 text/Markdown file, or - for stdin")
     ap.add_argument("--max-tokens", type=int, default=256)
     ap.add_argument("--min-tokens", type=int, default=48)
-    ap.add_argument("--window", type=int, default=2)
+    ap.add_argument("--window", type=int, default=3)
     ap.add_argument("--strategy", choices=["optimal", "greedy"], default="optimal")
     ap.add_argument("--threshold-type", choices=["percentile", "std", "iqr"],
                     default="percentile")
