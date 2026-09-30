@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "arabic-semantic-chunker"
+version = "0.1.0"
+description = "Structure-aware semantic chunking for Arabic text, built for RAG."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Mohammad Daoud" }]
+keywords = ["arabic", "nlp", "rag", "chunking", "semantic-chunking", "retrieval"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Natural Language :: Arabic",
+    "Topic :: Text Processing :: Linguistic",
+    "License :: OSI Approved :: MIT License",
+]
+dependencies = ["numpy>=1.22"]
+
+[project.optional-dependencies]
+transformers = ["sentence-transformers>=2.6"]
+dev = ["pytest>=7"]
+
+[project.scripts]
+arabic-chunker = "arabic_chunker.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["arabic_chunker*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
